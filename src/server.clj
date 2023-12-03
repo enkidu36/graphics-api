@@ -14,14 +14,13 @@
             [ring.adapter.jetty :as jetty]
             [ring.util.response :as r]
             [muuntaja.core :as m]
+            [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.cors :refer [wrap-cors]]))
 
 (defn testing-handler [_]
   (prn "testing too")
   (r/response "testing too"))
 
-(defn cron-converter [{{{:keys [expression]} :query} :parameters}]
-  (r/response expression))
 
 (def app
   (ring/ring-handler
@@ -32,15 +31,6 @@
                               :description "reitit ring with swagger, spec"}}
              :handler (swagger/create-swagger-handler)}}]
      
-     ["/cron"
-      ["/converter"
-       {:middleware [#(wrap-cors % :access-control-allow-origin [#".*"]
-                                 :access-control-allow-methods [:get])]
-        :get {:summary "Cron to text converter"
-              :parameters {:query {:expression string?}}
-              :responses {200 {:body string?}}
-              :handler cron-converter}}]]
-
      ["/testing"
       {:middleware [#(wrap-cors % :access-control-allow-origin [#".*"]
                                 :access-control-allow-methods [:get])]
@@ -80,7 +70,7 @@
                :operationsSorter "alpha"}})
     (ring/create-default-handler))))
 
-(defonce server  (jetty/run-jetty #'app
+(defonce server  (jetty/run-jetty (wrap-reload  #'app)
                                   {:port 3000, :join? false}))
 
 (defn start []
