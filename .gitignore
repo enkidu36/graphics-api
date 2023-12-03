@@ -1,0 +1,4 @@
+.cpcache/*
+.nrepl-port/*
+.clj-kondo/*
+.calva/output-window/output.calva-repl
